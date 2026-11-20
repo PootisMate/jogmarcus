@@ -53,7 +53,7 @@ static void ClearCompletedRows(bool settled[GRID_ROWS][GRID_COLS], int *score)
                 }
             }
             for (int col = 0; col < GRID_COLS; col++) settled[0][col] = false;
-            row++; /* Check this row again in case consecutive rows are full. */
+            row++;
         }
     }
 }
