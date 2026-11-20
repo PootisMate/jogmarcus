@@ -17,9 +17,16 @@ typedef struct {
     bool active;
 } FallingBlock;
 
+typedef enum {
+    SCREEN_TITLE,
+    SCREEN_INSTRUCTIONS,
+    SCREEN_GAME
+} GameScreen;
+
 static void ResetGame(Rectangle *player, FallingBlock blocks[MAX_BLOCKS],
                       bool settled[GRID_ROWS][GRID_COLS], int *score,
-                      float *elapsed, float *spawnTimer, bool *gameOver)
+                      float *elapsed, float *spawnTimer, bool *gameOver,
+                      float *playerVelocityY, bool *playerOnGround)
 {
     *player = (Rectangle){ SCREEN_WIDTH / 2.0f - 25.0f,
                            SCREEN_HEIGHT - 70.0f, 50.0f, 30.0f };
@@ -35,6 +42,8 @@ static void ResetGame(Rectangle *player, FallingBlock blocks[MAX_BLOCKS],
     *elapsed = 0.0f;
     *spawnTimer = 0.0f;
     *gameOver = false;
+    *playerVelocityY = 0.0f;
+    *playerOnGround = true;
 }
 
 static void ClearCompletedRows(bool settled[GRID_ROWS][GRID_COLS], int *score)
@@ -94,16 +103,31 @@ int main(void)
     float elapsed;
     float spawnTimer;
     bool gameOver;
-    ResetGame(&player, blocks, settled, &score, &elapsed, &spawnTimer, &gameOver);
+    float playerVelocityY;
+    bool playerOnGround;
+    ResetGame(&player, blocks, settled, &score, &elapsed, &spawnTimer, &gameOver,
+              &playerVelocityY, &playerOnGround);
+    GameScreen screen = SCREEN_TITLE;
 
     while (!WindowShouldClose()) {
         float deltaTime = GetFrameTime();
         bool playerMoving = false;
         UpdateGameMusic();
 
-        if (gameOver) {
+        if (screen == SCREEN_TITLE) {
+            if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
+                screen = SCREEN_INSTRUCTIONS;
+            }
+        } else if (screen == SCREEN_INSTRUCTIONS) {
+            if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
+                ResetGame(&player, blocks, settled, &score, &elapsed, &spawnTimer,
+                          &gameOver, &playerVelocityY, &playerOnGround);
+                screen = SCREEN_GAME;
+            }
+        } else if (gameOver) {
             if (IsKeyPressed(KEY_R)) {
-                ResetGame(&player, blocks, settled, &score, &elapsed, &spawnTimer, &gameOver);
+                ResetGame(&player, blocks, settled, &score, &elapsed, &spawnTimer, &gameOver,
+                          &playerVelocityY, &playerOnGround);
             }
         } else {
             elapsed += deltaTime;
@@ -116,6 +140,24 @@ int main(void)
             if (player.x < 0.0f) player.x = 0.0f;
             if (player.x + player.width > SCREEN_WIDTH) {
                 player.x = SCREEN_WIDTH - player.width;
+            }
+
+            if (playerOnGround && (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_UP))) {
+                playerVelocityY = -520.0f;
+                playerOnGround = false;
+                PlayPlayerJumpSound();
+            }
+
+            playerVelocityY += 1400.0f * deltaTime;
+            player.y += playerVelocityY * deltaTime;
+            float groundY = SCREEN_HEIGHT - 40.0f - player.height;
+            if (player.y >= groundY) {
+                player.y = groundY;
+                if (!playerOnGround && playerVelocityY > 0.0f) {
+                    PlayPlayerLandingSound();
+                }
+                playerVelocityY = 0.0f;
+                playerOnGround = true;
             }
 
             spawnTimer += deltaTime;
@@ -175,10 +217,28 @@ int main(void)
                                           (float)SCREEN_WIDTH,
                                           (float)SCREEN_HEIGHT });
 
-        DrawText("DODGE THE BLOCKS", 20, 18, 28, RAYWHITE);
-        DrawText(TextFormat("Time: %.1f", elapsed), 20, 55, 20, LIGHTGRAY);
-        DrawText(TextFormat("Score: %d", score), 20, 82, 20, YELLOW);
-        DrawText("Move: Left/Right or A/D", 20, SCREEN_HEIGHT - 32, 18, LIGHTGRAY);
+        if (screen == SCREEN_TITLE) {
+            DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 0, 0, 0, 135 });
+            DrawText("DESVIE DOS BLOCOS", SCREEN_WIDTH / 2 - 225, 190, 48, RAYWHITE);
+            DrawText("Desvie dos blocos e sobreviva!", SCREEN_WIDTH / 2 - 190,
+                     270, 22, LIGHTGRAY);
+            DrawText("Aperte ENTER", SCREEN_WIDTH / 2 - 125, 360,
+                     22, YELLOW);
+        } else if (screen == SCREEN_INSTRUCTIONS) {
+            DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 0, 0, 0, 155 });
+            DrawText("Como jogar", SCREEN_WIDTH / 2 - 145, 135, 40, RAYWHITE);
+            DrawText("Mover: Esquerda / Direita setas ou A / D", SCREEN_WIDTH / 2 - 205,
+                     220, 22, LIGHTGRAY);
+            DrawText("Pular: barra de espaço ou seta para cima", SCREEN_WIDTH / 2 - 155,
+                     265, 22, LIGHTGRAY);
+            DrawText("Desvie dos blocos caindo. Os blocos se empilham!",
+                     SCREEN_WIDTH / 2 - 245, 310, 20, LIGHTGRAY);
+            DrawText("Aperte ENTER para começar", SCREEN_WIDTH / 2 - 190,
+                     390, 22, YELLOW);
+        } else {
+        DrawText("DESVIE DOS BLOCOS", 20, 18, 28, RAYWHITE);
+        DrawText(TextFormat("Tempo: %.1f", elapsed), 20, 55, 20, LIGHTGRAY);
+        DrawText(TextFormat("Pontos: %d", score), 20, 82, 20, YELLOW);
 
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
@@ -196,16 +256,18 @@ int main(void)
                 DrawBlockSprite(blocks[i].rect);
             }
         }
-        DrawPlayerSprite(player);
+        DrawPlayerSprite(player, playerMoving, !playerOnGround, deltaTime);
 
         if (gameOver) {
             DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 0, 0, 0, 170 });
-            DrawText("GAME OVER", SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - 50,
+            DrawText("FIM DE JOGO", SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - 50,
                      40, RAYWHITE);
-            DrawText(TextFormat("You survived %.1f seconds", elapsed),
+            DrawText(TextFormat("Voce sobreviveu %.1f segundos", elapsed),
                      SCREEN_WIDTH / 2 - 145, SCREEN_HEIGHT / 2 + 5, 20, LIGHTGRAY);
-            DrawText("Press R to play again", SCREEN_WIDTH / 2 - 120,
+            DrawText("Aperte R para jogar de novo", SCREEN_WIDTH / 2 - 120,
                      SCREEN_HEIGHT / 2 + 45, 20, YELLOW);
+        }
+
         }
 
         EndDrawing();

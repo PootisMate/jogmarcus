@@ -5,7 +5,7 @@
 
 void InitGameSprites(void);
 void DrawBackgroundSprite(Rectangle destination);
-void DrawPlayerSprite(Rectangle destination);
+void DrawPlayerSprite(Rectangle destination, bool moving, bool jumping, float deltaTime);
 void DrawBlockSprite(Rectangle destination);
 void CloseGameSprites(void);
 
