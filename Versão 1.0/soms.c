@@ -1,11 +1,10 @@
 #include "raylib.h"
 #include "soms.h"
 
-/* Colocar os audios depois aqui*/
-#define JUMP_SOUND_PATH "assets/audio/player_jump.wav"
-#define PLAYER_LAND_SOUND_PATH "assets/audio/player_land.wav"
-#define BLOCK_LAND_SOUND_PATH "assets/audio/block_land.wav"
-#define MUSIC_PATH "assets/audio/background_music.ogg"
+#define JUMP_SOUND_PATH "assets/soms/jump.wav"
+#define PLAYER_LAND_SOUND_PATH "assets/soms/player_aterrizando.wav"
+#define BLOCK_LAND_SOUND_PATH "assets/soms/bloco_aterrizando.wav"
+#define MUSIC_PATH "assets/som/background_music.mp3"
 
 
 static Sound jumpSound;
