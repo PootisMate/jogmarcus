@@ -219,7 +219,7 @@ int main(void)
 
         if (screen == SCREEN_TITLE) {
             DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 0, 0, 0, 135 });
-            DrawText("DESVIE DOS BLOCOS", SCREEN_WIDTH / 2 - 225, 190, 48, RAYWHITE);
+            DrawText("BUN BLOCK", SCREEN_WIDTH / 2 - 225, 190, 48, RAYWHITE);
             DrawText("Desvie dos blocos e sobreviva!", SCREEN_WIDTH / 2 - 190,
                      270, 22, LIGHTGRAY);
             DrawText("Aperte ENTER", SCREEN_WIDTH / 2 - 125, 360,
