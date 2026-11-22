@@ -1,12 +1,11 @@
 #include "raylib.h"
 #include "sprites.h"
 
-/* Colocar os sprites depois aqui */
 #define PLAYER_SPRITE_PATH "sprites/Bun_Idle.png"
 #define PLAYER_WALK_SPRITE_PATH "sprites/Bun_Walks1.gif"
 #define PLAYER_JUMP_SPRITE_PATH "sprites/Bun_Jump.png"
-#define BLOCK_SPRITE_PATH "assets/images/block.png"
-#define BACKGROUND_SPRITE_PATH "assets/images/background.png"
+#define BLOCK_SPRITE_PATH "sprites/brick.png"
+#define BACKGROUND_SPRITE_PATH "sprites/background.jpg"
 #define PLAYER_WALK_FPS 10.0f
 #define PLAYER_JUMP_FPS 8.0f
 
